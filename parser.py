@@ -23,6 +23,9 @@ def parse_anno(path_anno):
     """
     res = {}
     tree = ET.ElementTree(file=path_anno)
+    # Parse annotation name
+    res['annoname'] = os.path.basename(path_anno)
+
     # Parse filename
     res['filename'] = tree.find('filename').text
 
