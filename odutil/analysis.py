@@ -50,7 +50,7 @@ def parse_anno(path_anno):
     return res
 
 
-def parse_annos(path_annos):
+def parse_annos(path_anno_folder):
     """
     Parse a list of annotation files into a list of dicts.
 
@@ -68,7 +68,8 @@ def parse_annos(path_annos):
              {'name': 'class1', 'xmin': '904', 'ymin': '674', 'xmax': '926', 'ymax': '695'},
              {'name': 'class2', 'xmin': '972', 'ymin': '693', 'xmax': '993', 'ymax': '713'}]}
     """
-    path_annos = [os.path.join(path_annos, i) for i in os.listdir(path_annos)]
+    path_annos = [os.path.join(path_anno_folder, i)
+                  for i in os.listdir(path_anno_folder)]
     pool = Pool(cpu_count())
     res = pool.map(parse_anno, path_annos)
     pool.close()
@@ -98,3 +99,68 @@ def check_match(path_1, path_2):
         if os.path.splitext(name)[0] not in set_name:
             return False
     return True
+
+
+def gen_label(path_anno, path_names, path_out):
+    """
+    Generate label txt from annotation.
+
+    Args:
+        path_anno: Path of the annotation file.
+        path_names: Path of the .names file.
+        path_out: Path of the output .txt file.
+
+    Returns:
+        None
+    """
+    anno = parse_anno(path_anno)
+    name2label = {}
+    with open(path_names) as f:
+        label = 0
+        for l in f:
+            name = l.strip('\n')
+            name2label[name] = label
+            label += 1
+
+    W, H = anno['size']['width'], anno['size']['height']
+    row = []
+    for bbox in anno['object']:
+        if bbox['name'] not in name2label:
+            continue
+        label = name2label[bbox['name']]
+        x_center = (bbox['xmin']+bbox['xmax'])/2
+        y_center = (bbox['ymin']+bbox['ymax'])/2
+        width = (bbox['xmax']-bbox['xmin'])/W
+        height = (bbox['ymax']-bbox['ymin'])/H
+        row.append(
+            ' '.join(list(map(str, [label, x_center, y_center, width, height]))))
+
+    if not os.path.isdir(path_out):
+        os.mkdir(path_out)
+    file_name = os.path.splitext(os.path.basename(path_anno))[0]
+    path_out_file = os.path.join(path_out, '{}.txt'.format(file_name))
+    with open(path_out_file, 'w') as f:
+        f.write('\n'.join(row))
+
+
+def gen_labels(path_anno_folder, path_names, path_out):
+    """
+    Generate label txt from a list of annotations.
+
+    Args:
+        path_anno_folder: Path of the annotation files folder.
+        path_names: Path of the .names file.
+        path_out: Path of the output .txt file.
+
+    Returns:
+        None
+    """
+    path_annos = [os.path.join(path_anno_folder, i)
+                  for i in os.listdir(path_anno_folder)]
+    path_names_ = [path_names for i in range(len(path_annos))]
+    path_out_ = [path_out for i in range(len(path_annos))]
+    pool = Pool(cpu_count())
+    pool.starmap(gen_label, zip(path_annos, path_names_,
+                                path_out_,))
+    pool.close()
+    pool.join()
