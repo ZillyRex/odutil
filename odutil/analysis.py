@@ -128,8 +128,8 @@ def gen_label(path_anno, path_names, path_out):
         if bbox['name'] not in name2label:
             continue
         label = name2label[bbox['name']]
-        x_center = (bbox['xmin']+bbox['xmax'])/2
-        y_center = (bbox['ymin']+bbox['ymax'])/2
+        x_center = (bbox['xmin']+bbox['xmax'])/(2*W)
+        y_center = (bbox['ymin']+bbox['ymax'])/(2*H)
         width = (bbox['xmax']-bbox['xmin'])/W
         height = (bbox['ymax']-bbox['ymin'])/H
         row.append(

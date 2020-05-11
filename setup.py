@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="odutil",
-    version="0.0.4",
+    version="0.0.5",
     author="ZillyRex",
     author_email="zillyrain@gmail.com",
     description="A group of utils for object detection.",

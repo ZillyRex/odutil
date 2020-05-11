@@ -4,8 +4,7 @@ import cv2.cv2 as cv2
 from . import analysis
 
 
-def draw_bbox(path_img, path_anno, path_out,
-              color_bbox=(0, 255, 0), color_text=(0, 0, 255)):
+def draw_bbox(path_img, path_anno, path_out):
     """
     Draw the bounding box of on an image by its annotation file.
 
@@ -25,6 +24,8 @@ def draw_bbox(path_img, path_anno, path_out,
     for obj in anno['object']:
         params.append([obj['name'], obj['xmin'],
                        obj['ymin'], obj['xmax'], obj['ymax']])
+    color_bbox = (0, 255, 0)
+    color_text = (0, 0, 255)
     for param in params:
         cls, xmin, ymin, xmax, ymax = param
         # BBOX
@@ -36,8 +37,7 @@ def draw_bbox(path_img, path_anno, path_out,
         os.path.basename(path_img))), img)
 
 
-def draw_bboxs(path_img_folder, path_anno_folder, path_out,
-               color_bbox=(0, 255, 0), color_text=(0, 0, 255)):
+def draw_bboxs(path_img_folder, path_anno_folder, path_out):
     """
     Draw the bounding box of on a list of images by their annotation files.
 
@@ -61,6 +61,8 @@ def draw_bboxs(path_img_folder, path_anno_folder, path_out,
     path_annos = [os.path.join(path_anno_folder, i)
                   for i in os.listdir(path_anno_folder)]
     path_out = [path_out for i in range(len(path_imgs))]
+    color_bbox = (0, 255, 0)
+    color_text = (0, 0, 255)
     color_bbox_ = [color_bbox for i in range(len(path_imgs))]
     color_text_ = [color_text for i in range(len(path_imgs))]
     pool = Pool(cpu_count())
