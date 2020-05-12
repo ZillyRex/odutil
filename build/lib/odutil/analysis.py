@@ -164,3 +164,27 @@ def gen_labels(path_anno_folder, path_names, path_out):
                                 path_out_,))
     pool.close()
     pool.join()
+
+
+def distribution(path_anno_folder, verbose=0):
+    """
+    Analysis the bbox distribution by a list of annotation files.
+
+    Args:
+        path_anno_folder: Path of the annotation files folder.
+
+    Returns：
+        A dict contains the result.
+    """
+    annos = parse_annos(path_anno_folder)
+    d = {}
+    d['N'] = 0
+    for anno in annos:
+        objs = anno['object']
+        for obj in objs:
+            d[obj['name']] = d.setdefault(obj['name'], 0)+1
+            d['N'] += 1
+    if verbose:
+        for name in d:
+            print('{}: {}({:.4f}%)'.format(name, d[name], 100*d[name]/d['N']))
+    return d
