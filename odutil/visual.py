@@ -120,4 +120,4 @@ def drwa_result(path_result, path_img_folder, path_out, verbose=0):
                 w = int(float(l[7]))
                 h = int(float(l[9][:-1]))
                 args_list.append(
-                    (cls_, x, y, w, h, (255, 255, 0), (255, 255, 0)))
+                    (cls_, x, y, w, h, (0, 255, 255), (0, 255, 255)))

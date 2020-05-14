@@ -32,15 +32,8 @@ analysis.parse_annos(path_anno_folder):
         path_anno: The directory of the annotation files you wanna parse.
 
     Returns:
-        A list of dicts. Each of them mapping filename, size and objects in the annotation to the
-        corresponding data fetched.
-        For example:
-
-        {'filename': 'image.jpg',
-         'size': {'width': '1621', 'height': '1216', 'depth': '3'},
-         'object': [
-             {'name': 'class1', 'xmin': '904', 'ymin': '674', 'xmax': '926', 'ymax': '695'},
-             {'name': 'class2', 'xmin': '972', 'ymin': '693', 'xmax': '993', 'ymax': '713'}]}
+        A dict of dicts. Each of them mapping annotation file name("annoname")
+        to the corresponding annotation dict fetched by parse_anno().
     """
 
 analysis.check_match(path_1, path_2):
@@ -81,7 +74,7 @@ analysis.gen_labels(path_anno_folder, path_names, path_out):
         None
     """
 
-analysis.distribution(path_anno_folder, verbose=0):
+analysis.bbox_distribution(path_anno_folder, verbose=0):
     """
     Analysis the bbox distribution by a list of annotation files.
 

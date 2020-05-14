@@ -1,11 +1,11 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="odutil",
-    version="0.0.6",
+    version="0.0.7",
     author="ZillyRex",
     author_email="zillyrain@gmail.com",
     description="A group of utils for object detection.",
