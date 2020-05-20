@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# @Author  : ZillyRex
+
+
 import os
 from multiprocessing import Pool, cpu_count
 import cv2.cv2 as cv2
@@ -36,7 +40,7 @@ def draw_anno(path_img, path_anno, path_out, verbose=0):
         path_anno: Path of the corresponding annotation file.
         path_out: Path of the output folder.
 
-    Return:
+    Returns:
         None
     """
     img = cv2.imread(path_img)
@@ -66,7 +70,7 @@ def draw_annos(path_img_folder, path_anno_folder, path_out, verbose=0):
         path_anno_folder: Path of the corresponding annotation folder.
         path_out: Path of the output folder.
 
-    Return:
+    Returns:
         None
     """
     if not analysis.check_match(path_anno_folder, path_img_folder):
@@ -94,6 +98,14 @@ def drwa_result(path_result, path_img_folder, path_out, verbose=0):
         ...... /xxx/xxx/xxx.jpg: ......
         class_name: 75%	(left_x:  626   top_y:  961   width:   50   height:   18)
         class_name: 84%	(left_x:  626   top_y:  943   width:   47   height:   20)
+
+    Args:
+        path_result: Path of the result file.
+        path_img_folder: Path of the folder containing all the images in the result file.
+        path_out: Path of the output folder.
+
+    Returns:
+        None
     """
     if not os.path.isdir(path_out):
         os.mkdir(path_out)

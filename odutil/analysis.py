@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# @Author  : ZillyRex
+
+
 import os
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
@@ -56,7 +60,7 @@ def parse_annos(path_anno_folder):
     Parse a list of annotation files into a list of dicts.
 
     Args:
-        path_anno: The directory of the annotation files you wanna parse.
+        path_anno_folder: Path of the directory of the annotation files you wanna parse.
 
     Returns:
         A dict of dicts. Each of them mapping annotation file name("annoname")
@@ -175,13 +179,15 @@ def bbox_distribution(path_anno_folder, verbose=0):
     """
     annos = parse_annos(path_anno_folder)
     d = {}
-    d['N'] = 0
-    for anno in annos:
+    d['LEN'] = 0
+    for annoname in annos:
+        anno = annos[annoname]
         objs = anno['object']
         for obj in objs:
             d[obj['name']] = d.setdefault(obj['name'], 0)+1
-            d['N'] += 1
+            d['LEN'] += 1
     if verbose:
         for name in d:
-            print('{}: {}({:.4f}%)'.format(name, d[name], 100*d[name]/d['N']))
+            print('{}: {}({:.4f}%)'.format(
+                name, d[name], 100*d[name]/d['LEN']))
     return d

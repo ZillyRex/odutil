@@ -2,6 +2,7 @@ README.md
 setup.py
 odutil/__init__.py
 odutil/analysis.py
+odutil/process.py
 odutil/visual.py
 odutil.egg-info/PKG-INFO
 odutil.egg-info/SOURCES.txt
