@@ -90,7 +90,7 @@ def draw_annos(path_img_folder, path_anno_folder, path_out, verbose=0):
     pool.join()
 
 
-def drwa_result(path_result, path_img_folder, path_out, verbose=0):
+def draw_result(path_result, path_img_folder, path_out, verbose=0):
     """
     Draw the bounding box by a result file.
     The result file format is as follow:
@@ -113,7 +113,7 @@ def drwa_result(path_result, path_img_folder, path_out, verbose=0):
     basename = None
     with open(path_result) as f:
         for line in f:
-            if '.jpg' in line:
+            if 'Enter Image Path:' in line:
                 if args_list:
                     img = cv2.imread(os.path.join(path_img_folder, basename))
                     for args in args_list:
