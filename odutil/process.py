@@ -15,7 +15,7 @@ def resize_img(resize_func, path_img, path_img_out,
 
     Args:
         resize_func: A function defining the resize strategy which calls two
-        parameters, width and height, and return the new width and height after resizing.
+        parameters, width and height, and returns the new width and height after resizing.
         eg. resize_func(x, y): return (x/2 if x > 2000 else x, y/3 if y > 3000 else y)
         path_img: Path of the image you wanna resize.
         path_img_out: Path of the folder you wanna save the image after resizing.
@@ -28,6 +28,9 @@ def resize_img(resize_func, path_img, path_img_out,
         None
     """
     img = cv2.imread(path_img)
+    if not img:
+        print('Something wrong with the image {}.'.format(path_img))
+        return
     H, W, _ = img.shape
     img = cv2.resize(img, (resize_func(W, H)), interpolation=cv2.INTER_NEAREST)
 
@@ -66,7 +69,7 @@ def resize_imgs(resize_func, path_img_folder, path_img_out,
 
     Args:
         resize_func: A function defining the resize strategy which calls two
-        parameters, width and height, and return the new width and height after resizing.
+        parameters, width and height, and returns the new width and height after resizing.
         eg. resize_func(x, y): return (x/2 if x > 2000 else x, y/3 if y > 3000 else y)
         path_img_folder: Path of the folder containing all the images you wanna resize.
         path_img_out: Path of the folder you wanna save the images after resizing.
