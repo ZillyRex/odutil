@@ -113,7 +113,7 @@ def draw_result(path_result, path_img_folder, path_out, verbose=0):
     basename = None
     with open(path_result) as f:
         for line in f:
-            if 'Enter Image Path:' in line:
+            if '/' in line:
                 if args_list:
                     img = cv2.imread(os.path.join(path_img_folder, basename))
                     for args in args_list:
@@ -122,7 +122,7 @@ def draw_result(path_result, path_img_folder, path_out, verbose=0):
                     args_list.clear()
                     if verbose:
                         print(basename)
-                abspth = line[line.find('/'):line.find('.jpg')+4]
+                abspth = line.split()[3][:-1]
                 basename = os.path.basename(abspth)
             if '%' in line:
                 l = line.strip('\n').split()

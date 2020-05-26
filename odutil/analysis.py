@@ -191,3 +191,26 @@ def bbox_distribution(path_anno_folder, verbose=0):
             print('{}: {}({:.4f}%)'.format(
                 name, d[name], 100*d[name]/d['LEN']))
     return d
+
+
+def get_label(path_names):
+    """
+    Get name2label and label2name from a .names file.
+
+    Args:
+        path_names: Path of the .names file.
+
+    Returns:
+        name2label: A dict like {'name1': 0, 'name2': 1, ...}
+        label2name: A dict like {0: 'name1', 1: 'name2', ...}
+    """
+    name2label = {}
+    label2name = {}
+    with open(path_names) as f:
+        label = 0
+        for l in f:
+            name = l.strip('\n')
+            name2label[name] = label
+            label2name[label] = name
+            label += 1
+    return name2label, label2name
