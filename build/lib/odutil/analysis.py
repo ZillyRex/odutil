@@ -74,7 +74,7 @@ def parse_annos(path_anno_folder):
     pool.join()
     annos_dict = {}
     for anno in res:
-        annos_dict[anno['annoname']] = anno
+        annos_dict[os.path.splitext(anno['annoname'])[0]] = anno
     return annos_dict
 
 
