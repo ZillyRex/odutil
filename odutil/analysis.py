@@ -78,7 +78,7 @@ def parse_annos(path_anno_folder):
     return annos_dict
 
 
-def check_match(path_1, path_2):
+def is_match(path_1, path_2):
     """
     Check if the file names in the folders match each other.
 
@@ -102,26 +102,20 @@ def check_match(path_1, path_2):
     return True
 
 
-def gen_label(path_anno, path_names, path_out):
+def anno2label(path_anno, path_names, path_out):
     """
     Generate label txt from annotation.
 
     Args:
         path_anno: Path of the annotation file.
-        path_names: Path of the .names file.
+        path_names: Path of the .names file. Only the class in the .names will be converted.
         path_out: Path of the output .txt file.
 
     Returns:
         None
     """
     anno = parse_anno(path_anno)
-    name2label = {}
-    with open(path_names) as f:
-        label = 0
-        for l in f:
-            name = l.strip('\n')
-            name2label[name] = label
-            label += 1
+    name2label, _ = get_label(path_names)
 
     W, H = anno['size']['width'], anno['size']['height']
     row = []
@@ -144,7 +138,7 @@ def gen_label(path_anno, path_names, path_out):
         f.write('\n'.join(row))
 
 
-def gen_labels(path_anno_folder, path_names, path_out):
+def annos2labels(path_anno_folder, path_names, path_out):
     """
     Generate label txt from a list of annotations.
 
@@ -161,13 +155,13 @@ def gen_labels(path_anno_folder, path_names, path_out):
     path_names_ = [path_names for i in range(len(path_annos))]
     path_out_ = [path_out for i in range(len(path_annos))]
     pool = Pool(cpu_count())
-    pool.starmap(gen_label, zip(path_annos, path_names_,
-                                path_out_,))
+    pool.starmap(anno2label, zip(path_annos, path_names_,
+                                 path_out_,))
     pool.close()
     pool.join()
 
 
-def bbox_distribution(path_anno_folder, verbose=0):
+def bbox_dist(path_anno_folder, verbose=0):
     """
     Analysis the bbox distribution by a list of annotation files.
 
