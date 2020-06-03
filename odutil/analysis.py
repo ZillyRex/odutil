@@ -208,3 +208,26 @@ def get_label(path_names):
             label2name[label] = name
             label += 1
     return name2label, label2name
+
+
+def base2abs(path_base, path_prefix, path_out):
+    """
+    Convert the base names to absolute paths.
+
+    Args:
+        path_base: Path of the base file.
+        path_prefix: Prefix path you wanna put behind the base names.
+        path_out: Path of the output file.
+
+    Returns:
+        None
+    """
+    prefix_abs = os.path.abspath(path_prefix)
+    bases = []
+    with open(path_base) as f:
+        for line in f:
+            bases.append(line.strip('\n'))
+
+    bases_abs = [os.path.join(prefix_abs, i) for i in bases]
+    with open(path_out, 'w') as f:
+        f.write('\n'.join(bases_abs))

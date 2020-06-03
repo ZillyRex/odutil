@@ -73,7 +73,7 @@ def draw_annos(path_img_folder, path_anno_folder, path_out, verbose=0):
     Returns:
         None
     """
-    if not analysis.check_match(path_anno_folder, path_img_folder):
+    if not analysis.is_match(path_anno_folder, path_img_folder):
         print('file names in the images and annotation folders don\'t match each other!')
         return
     if not os.path.isdir(path_out):
