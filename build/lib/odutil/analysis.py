@@ -3,6 +3,7 @@
 
 
 import os
+import numpy as np
 import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 
@@ -231,3 +232,31 @@ def base2abs(path_base, path_prefix, path_out):
     bases_abs = [os.path.join(prefix_abs, i) for i in bases]
     with open(path_out, 'w') as f:
         f.write('\n'.join(bases_abs))
+
+
+def split_trainval(path_img_folder, path_train, path_val, ratio_train):
+    '''
+    Split the date into training & validation subset by basename format.
+
+    Param:
+        path_img_folder: Path of JPEImages.
+        path_train: Path of the txt file containing training subset.
+        path_val: Path of the txt file containing validation subset.
+        ratio_train: The ratio of training set which should be more than 0 and less or equal than 1.
+
+    Return:
+        None
+    '''
+    if not 0 < ratio_train <= 1:
+        print('Please set a right ratio_train.')
+        return
+    name_all = os.listdir(path_img_folder)
+    np.random.seed(0)
+    np.random.shuffle(name_all)
+    len_train = int(len(name_all)*ratio_train)
+    name_train = name_all[:len_train]
+    name_test = name_all[len_train:]
+    with open(path_train, 'w') as f:
+        f.write('\n'.join(name_train))
+    with open(path_val, 'w') as f:
+        f.write('\n'.join(name_test))
