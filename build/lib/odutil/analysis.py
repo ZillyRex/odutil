@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from multiprocessing import Pool, cpu_count
 
 
-def parse_anno(path_anno):
+def parse_anno(path_anno, verbose=0):
     """
     Parse an annotation file into a dict.
 
@@ -27,14 +27,13 @@ def parse_anno(path_anno):
              {'name': 'class1', 'xmin': '904', 'ymin': '674', 'xmax': '926', 'ymax': '695'},
              {'name': 'class2', 'xmin': '972', 'ymin': '693', 'xmax': '993', 'ymax': '713'}]}
     """
+    if verbose:
+        print(path_anno)
     res = {}
     tree = ET.ElementTree(file=path_anno)
 
     # Parse annotation name
     res['annoname'] = os.path.basename(path_anno)
-
-    # Parse filename
-    res['filename'] = tree.find('filename').text
 
     # Parse size
     size = tree.find('size')
