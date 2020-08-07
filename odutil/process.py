@@ -4,7 +4,7 @@
 
 import os
 from multiprocessing import Pool, cpu_count
-import cv2.cv2 as cv2
+import cv2
 
 
 def resize_img(resize_func, path_img, path_img_out,
