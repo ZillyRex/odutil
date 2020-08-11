@@ -343,13 +343,16 @@ def _convert_darknet(dir_gt, path_res, mode):
     mode = str(mode)
 
     if mode[1] == '0':
+        # Annotations
         ground_truth = parse_annos(dir_gt)
     elif mode[1] == '1':
+        # labels
         pass
     else:
         raise Exception('Invalid mode.')
 
     if mode[2] == '0':
+        # .json
         with open(path_res) as f:
             jsonData = f.readlines()
             jsonData = ''.join(jsonData)
@@ -377,8 +380,10 @@ def _convert_darknet(dir_gt, path_res, mode):
                              'conf': obj['confidence']})
             results[base_name] = objs
     elif mode[2] == '1':
+        # .txt
         pass
     elif mode[2] == '2':
+        # comp4_
         pass
     else:
         raise Exception('Invalid mode.')
@@ -386,14 +391,56 @@ def _convert_darknet(dir_gt, path_res, mode):
     return ground_truth, results
 
 
-def _convert_mmdet(dir_gt, path_res, mode):
+def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
     """
-    mode: ???
+    mode: gt {0, 1}: annotations, labels(cls_id cx cy w h)
+          res {0}: .pkl by test
     """
-    return {}, {}
+
+    ground_truth, results = {}, {}
+    mode = str(mode)
+
+    if mode[1] == '0':
+        # Annotations
+        ground_truth = parse_annos(dir_gt)
+    elif mode[1] == '1':
+        # labels
+        pass
+    else:
+        raise Exception('Invalid mode.')
+
+    if mode[2] == '0':
+        # .pkl or .pickle
+        import pickle
+        with open(path_res, 'rb') as f:
+            results_data = pickle.load(f, encoding='utf-8')
+
+        with open(dataset) as f:
+            base_names = []
+            for line in f:
+                base_names.append(os.path.splitext(
+                    os.path.basename(line.strip()))[0])
+
+        name2label, label2name = get_label(names)
+
+        for frame_id, base_name in enumerate(base_names, 0):
+            objs = []
+            for cls_id, objs_pre in enumerate(results_data[frame_id]):
+                for obj_pre in objs_pre:
+                    objs.append({'name': label2name[cls_id],
+                                 'xmin': obj_pre[0],
+                                 'ymin': obj_pre[1],
+                                 'xmax': obj_pre[2],
+                                 'ymax': obj_pre[3],
+                                 'conf': obj_pre[4]})
+                results[base_name] = objs
+    else:
+        raise Exception('Invalid mode.')
+
+    return ground_truth, results
 
 
-def convert_gt_results(gt, res, mode):
+def convert_gt_results(gt, res, mode, dataset=None, names=None):
     """
     mode: 1xx: darknet, 2xx: mmdet
     """
@@ -402,18 +449,22 @@ def convert_gt_results(gt, res, mode):
     if mode[0] == '1':
         return _convert_darknet(gt, res, mode)
     if mode[0] == '2':
-        return _convert_mmdet(gt, res, mode)
+        if not (dataset and names):
+            raise Exception(
+                'dataset and names must be set if the mode is 2xx.')
+        return _convert_mmdet(gt, res, mode, dataset, names)
 
     raise Exception('Invalid mode.')
 
 
 def precision_recall(gt, res, mode, conf_thresh,
-                     iou_thresh=0.5, verbose=0):
+                     dataset=None, names=None, iou_thresh=0.5, verbose=0):
     """
     precision recall
     """
 
-    ground_truth, results = convert_gt_results(gt, res, mode)
+    ground_truth, results = convert_gt_results(
+        gt, res, mode, dataset=dataset, names=names)
 
     tp_fp_fn_res = tp_fp_fn(ground_truth, results, conf_thresh, iou_thresh)
 
@@ -421,8 +472,8 @@ def precision_recall(gt, res, mode, conf_thresh,
         tp = tp_fp_fn_res[clss]['tp']
         fp = tp_fp_fn_res[clss]['fp']
         fn = tp_fp_fn_res[clss]['fn']
-        precision = tp/(tp+fp+1e-8)
-        recall = tp/(tp+fn+1e-8)
+        precision = np.round(tp/(tp+fp+1e-8), 5)
+        recall = np.round(tp/(tp+fn+1e-8), 5)
         tp_fp_fn_res[clss]['precision'] = precision
         tp_fp_fn_res[clss]['recall'] = recall
         if verbose:
@@ -431,7 +482,7 @@ def precision_recall(gt, res, mode, conf_thresh,
     return tp_fp_fn_res
 
 
-def mAP(gt, res, mode, verbose=0, draw=False):
+def mAP(gt, res, mode, dataset=None, names=None, verbose=0, draw=False):
     """
     mAP
     """
@@ -439,7 +490,8 @@ def mAP(gt, res, mode, verbose=0, draw=False):
     pbar = tqdm(total=len(np.arange(0, 1.1, 0.1)),
                 ncols=100, desc='Processing mAP: ')
     for thresh in np.arange(0, 1.1, 0.1):
-        tp_fp_fn_res = precision_recall(gt, res, mode, thresh)
+        tp_fp_fn_res = precision_recall(
+            gt, res, mode, thresh, dataset=dataset, names=names)
         for clss in tp_fp_fn_res:
             if clss not in AP:
                 AP[clss] = {'precision': [], 'recall': []}
