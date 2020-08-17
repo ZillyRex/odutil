@@ -6,6 +6,7 @@ import os
 import xml.etree.ElementTree as ET
 import json
 from multiprocessing import Pool, cpu_count
+import pickle
 import numpy as np
 from tqdm import tqdm
 
@@ -121,7 +122,7 @@ def anno2label(path_anno, path_names, path_out):
 
     W, H = anno['size']['width'], anno['size']['height']
     row = []
-    for bbox in anno['object']:
+    for bbox in anno['objects']:
         if bbox['name'] not in name2label:
             continue
         label = name2label[bbox['name']]
@@ -411,7 +412,6 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
 
     if mode[2] == '0':
         # .pkl or .pickle
-        import pickle
         with open(path_res, 'rb') as f:
             results_data = pickle.load(f, encoding='utf-8')
 
@@ -421,7 +421,7 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
                 base_names.append(os.path.splitext(
                     os.path.basename(line.strip()))[0])
 
-        name2label, label2name = get_label(names)
+        _, label2name = get_label(names)
 
         for frame_id, base_name in enumerate(base_names, 0):
             objs = []
