@@ -48,7 +48,7 @@ def draw_anno(path_img, path_anno, path_out, verbose=0):
     color_bbox = (0, 255, 0)
     color_text = (0, 0, 255)
     params = []
-    for obj in anno['object']:
+    for obj in anno['objects']:
         params.append((obj['name'],
                        obj['xmin'], obj['ymin'],
                        obj['xmax']-obj['xmin'], obj['ymax']-obj['ymin'],

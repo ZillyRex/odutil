@@ -443,6 +443,8 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
 def convert_gt_results(gt, res, mode, dataset=None, names=None):
     """
     mode: 1xx: darknet, 2xx: mmdet
+    final gt format: Same as parse_anno
+    final res format: {base_name: [{name:str, xmin:dig, ymin:dig, xmax:dig, ymax:dig, conf:dig}]}
     """
 
     mode = str(mode)
