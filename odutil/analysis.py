@@ -27,7 +27,8 @@ def parse_anno(path_anno, verbose=0):
          'filename': 'image.jpg',
          'size': {'width': '1621', 'height': '1216', 'depth': '3'},
          'objects': [
-             {'name': 'class1', 'xmin': '904', 'ymin': '674', 'xmax': '926', 'ymax': '695'},
+             {'name': 'class1', 'xmin': '904', 'ymin': '674',
+                 'xmax': '926', 'ymax': '695'},
              {'name': 'class2', 'xmin': '972', 'ymin': '693', 'xmax': '993', 'ymax': '713'}]}
     """
     if verbose:
@@ -399,6 +400,7 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
     """
 
     ground_truth, results = {}, {}
+    _, label2name = get_label(names)
     mode = str(mode)
 
     if mode[1] == '0':
@@ -421,8 +423,6 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
                 base_names.append(os.path.splitext(
                     os.path.basename(line.strip()))[0])
 
-        _, label2name = get_label(names)
-
         for frame_id, base_name in enumerate(base_names, 0):
             objs = []
             for cls_id, objs_pre in enumerate(results_data[frame_id]):
@@ -440,11 +440,111 @@ def _convert_mmdet(dir_gt, path_res, mode, dataset, names):
     return ground_truth, results
 
 
+def _convert_simpledet(dir_gt, path_res, mode, dataset, names):
+    """
+    mode: gt {0, 1}: annotations, labels(cls_id cx cy w h)
+          res {0}: .json by test
+    """
+
+    ground_truth, results = {}, {}
+    _, label2name = get_label(names)
+    mode = str(mode)
+
+    if mode[1] == '0':
+        # Annotations
+        ground_truth = parse_annos(dir_gt)
+    elif mode[1] == '1':
+        # labels
+        pass
+    else:
+        raise Exception('Invalid mode.')
+
+    if mode[2] == '0':
+        # .json
+        with open(path_res) as f:
+            jsonData = f.readlines()
+            jsonData = ''.join(jsonData)
+            results_data = json.loads(jsonData)
+
+        with open(dataset) as f:
+            base_names = {}
+            images_id = 0
+            for line in f:
+                base_names[images_id] = os.path.splitext(
+                    os.path.basename(line.strip()))[0]
+                images_id += 1
+
+        for box in results_data:
+            base_name = base_names[box['image_id']]
+            if base_name not in results:
+                results[base_name] = []
+            x, y, w, h = box['bbox']
+            # W, H = ground_truth[base_name]['size']['width'], ground_truth[base_name]['size']['height']
+            # x = W*x/800
+            # y = H*y/1200
+            # w = W*w/800
+            # h = H*h/1200
+            # TODO: SimpleDet Result ERROR！！！
+            results[base_name].append({'name': label2name[box['category_id']],
+                                       'xmin': x,
+                                       'ymin': y,
+                                       'xmax': x+w,
+                                       'ymax': y+h,
+                                       'conf': box['score']})
+    else:
+        raise Exception('Invalid mode.')
+
+    return ground_truth, results
+
+
+def _convert_yolov5(dir_gt, path_res, mode, names):
+    """
+    mode: gt {0, 1}: annotations, labels(cls_id cx cy w h)
+          res {0}: .json by test
+    """
+
+    ground_truth, results = {}, {}
+    _, label2name = get_label(names)
+    mode = str(mode)
+
+    if mode[1] == '0':
+        # Annotations
+        ground_truth = parse_annos(dir_gt)
+    elif mode[1] == '1':
+        # labels
+        pass
+    else:
+        raise Exception('Invalid mode.')
+
+    if mode[2] == '0':
+        # .json
+        with open(path_res) as f:
+            jsonData = f.readlines()
+            jsonData = ''.join(jsonData)
+            results_data = json.loads(jsonData)
+
+        for box in results_data:
+            base_name = box['image_id']
+            if base_name not in results:
+                results[base_name] = []
+            x, y, w, h = box['bbox']
+            results[base_name].append({'name': label2name[box['category_id']-1],
+                                       'xmin': x,
+                                       'ymin': y,
+                                       'xmax': x+w,
+                                       'ymax': y+h,
+                                       'conf': box['score']})
+    else:
+        raise Exception('Invalid mode.')
+
+    return ground_truth, results
+
+
 def convert_gt_results(gt, res, mode, dataset=None, names=None):
     """
-    mode: 1xx: darknet, 2xx: mmdet
+    mode: 1xx: darknet, 2xx: mmdet, 3xx: simpledet, 4xx: yolov5
     final gt format: Same as parse_anno
-    final res format: {base_name: [{name:str, xmin:dig, ymin:dig, xmax:dig, ymax:dig, conf:dig}]}
+    final res format: {base_name(no extend): [{'name':str, 'xmin':dig, 'ymin':dig, 'xmax':dig, 'ymax':dig, 'conf':dig}]}
     """
 
     mode = str(mode)
@@ -455,19 +555,24 @@ def convert_gt_results(gt, res, mode, dataset=None, names=None):
             raise Exception(
                 'dataset and names must be set if the mode is 2xx.')
         return _convert_mmdet(gt, res, mode, dataset, names)
+    if mode[0] == '3':
+        if not (dataset and names):
+            raise Exception(
+                'dataset and names must be set if the mode is 3xx.')
+        return _convert_simpledet(gt, res, mode, dataset, names)
+    if mode[0] == '4':
+        if not names:
+            raise Exception(
+                'names must be set if the mode is 4xx.')
+        return _convert_yolov5(gt, res, mode, names)
 
     raise Exception('Invalid mode.')
 
 
-def precision_recall(gt, res, mode, conf_thresh,
-                     dataset=None, names=None, iou_thresh=0.5, verbose=0):
+def precision_recall(ground_truth, results, conf_thresh, iou_thresh=0.5, verbose=0):
     """
     precision recall
     """
-
-    ground_truth, results = convert_gt_results(
-        gt, res, mode, dataset=dataset, names=names)
-
     tp_fp_fn_res = tp_fp_fn(ground_truth, results, conf_thresh, iou_thresh)
 
     for clss in tp_fp_fn_res:
@@ -479,7 +584,13 @@ def precision_recall(gt, res, mode, conf_thresh,
         tp_fp_fn_res[clss]['precision'] = precision
         tp_fp_fn_res[clss]['recall'] = recall
         if verbose:
-            print(clss, tp_fp_fn_res[clss])
+            print('{:12}: TP:{:5}, FP:{:5}, FN:{:5}, Precision: {}, Recall: {}'.format(
+                clss,
+                tp_fp_fn_res[clss]['tp'],
+                tp_fp_fn_res[clss]['fp'],
+                tp_fp_fn_res[clss]['fn'],
+                tp_fp_fn_res[clss]['precision'],
+                tp_fp_fn_res[clss]['recall']))
 
     return tp_fp_fn_res
 
@@ -489,11 +600,12 @@ def mAP(gt, res, mode, dataset=None, names=None, verbose=0, draw=False):
     mAP
     """
     AP = {}
-    pbar = tqdm(total=len(np.arange(0, 1.1, 0.1)),
+    pbar = tqdm(total=len(np.arange(0, 1.01, 0.01)),
                 ncols=100, desc='Processing mAP: ')
-    for thresh in np.arange(0, 1.1, 0.1):
-        tp_fp_fn_res = precision_recall(
-            gt, res, mode, thresh, dataset=dataset, names=names)
+    ground_truth, results = convert_gt_results(
+        gt, res, mode, dataset=dataset, names=names)
+    for thresh in np.arange(0, 1.01, 0.01):
+        tp_fp_fn_res = precision_recall(ground_truth, results, thresh)
         for clss in tp_fp_fn_res:
             if clss not in AP:
                 AP[clss] = {'precision': [], 'recall': []}
@@ -509,7 +621,7 @@ def mAP(gt, res, mode, dataset=None, names=None, verbose=0, draw=False):
 
     if verbose:
         for clss in AP:
-            print('{}, AP: {:.4f}, AR: {:.4f}'.format(
+            print('{:12}: AP: {:.4f}, AR: {:.4f}'.format(
                 clss, np.mean(AP[clss]['precision']), np.mean(AP[clss]['recall'])))
         print('mAP: {:.4f}'.format(mAP_res))
 

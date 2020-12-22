@@ -4,7 +4,9 @@
 
 import os
 from multiprocessing import Pool, cpu_count
+import json
 import cv2
+from . import analysis
 
 
 def resize_img(resize_func, path_img, path_img_out,
@@ -114,3 +116,52 @@ def resize_imgs(resize_func, path_img_folder, path_img_out,
                                  path_labels, path_label_out_, verbose_))
     pool.close()
     pool.join()
+
+
+def voc_to_coco(annos_dir, json_path, class_dict):
+    '''
+    Convert VOC label to COCO label, the image extension is .jpg.
+
+    Args:
+        annos_dir: The XML files folder directory of VOC label.
+        json_path: The output COCO json file path.
+        class_dict: {class_name: class_id}
+
+    Returns:
+        None
+    '''
+    annos_dict = analysis.parse_annos(annos_dir)
+    coco_dict = {}
+    coco_dict['info'] = {"description": "convert from {}".format(annos_dir),
+                         "url": "",
+                         "version": "",
+                         "year": 0,
+                         "contributor": "",
+                         "date_created": ""}
+    coco_dict['images'] = []
+    coco_dict['annotations'] = []
+    image_id = 1
+    box_id = 1
+    for basename in annos_dict:
+        img_dict = {'id': image_id,
+                    'width': annos_dict[basename]['size']['width'],
+                    'height': annos_dict[basename]['size']['height'],
+                    'file_name': basename+'.jpg',
+                    'license': 0,
+                    'flickr_url': '',
+                    'coco_url': '',
+                    'date_captured': '2020.12'}
+        coco_dict['images'].append(img_dict)
+
+        for obj in annos_dict[basename]['objects']:
+            box_dict = {'id': box_id,
+                        'image_id': image_id,
+                        'category_id': class_dict[obj['name']],
+                        'bbox': [obj['xmin'], obj['ymin'], obj['xmax']-obj['xmin'], obj['ymax']-obj['ymin']]}
+            coco_dict['annotations'].append(box_dict)
+            box_id += 1
+        image_id += 1
+    coco_dict["categories"] = [
+        {'id': class_dict[cls_name], 'name':cls_name} for cls_name in class_dict]
+    with open(json_path, 'w') as f:
+        json.dump(coco_dict, f)
